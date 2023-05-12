@@ -22,5 +22,5 @@ app.use('/api', joinRouter);
 app.use('/api/user', userRouter);
 
 const server = app.listen(process.env.PORT, () => {
-  console.log(`Roundtable Chat Server listening on port ${process.env.port}`);
+  console.log(`Roundtable Chat Server listening on port ${process.env.PORT}`);
 });
