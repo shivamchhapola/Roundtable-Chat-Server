@@ -2,8 +2,7 @@ import asyncHandler from 'express-async-handler';
 import Joi from 'joi';
 import { joiPasswordExtendCore } from 'joi-password';
 import { nanoid } from 'nanoid';
-import User from '../Models/user_data.js';
-import UserProfile from '../Models/user_profile.js';
+import { userModel, userProfileModel } from '../Models/user.js';
 import { generateToken } from '../jwt.js';
 
 const joiPassword = Joi.extend(joiPasswordExtendCore);
@@ -17,7 +16,7 @@ const validationSchema = Joi.object({
   password: joiPassword
     .string()
     .min(8)
-    .max(200)
+    .max(150)
     .minOfLowercase(1)
     .minOfUppercase(1)
     .minOfNumeric(1),
@@ -46,16 +45,16 @@ const register = asyncHandler(async (req, res) => {
     return res.status(400).send(validate.error.details[0].message);
 
   //Checks if the Email already exists in the DB
-  const alreadyExists = await User.findOne({ email });
+  const alreadyExists = await userModel.findOne({ email });
   if (alreadyExists)
     return res.status(400).send('An account with this Email already exists');
 
   //Inserts the data into User collection
-  const user = await User.create(data).catch((err) => {
+  const user = await userModel.create(data).catch((err) => {
     return res.status(500).send('Could not create an account: ' + err);
   });
   if (user) {
-    await UserProfile.create({ userid: user._id }).catch((err) => {
+    await userProfileModel.create({ userid: user._id }).catch((err) => {
       return res.status(501).send('Error Creating user Profile: ' + err);
     });
     return res.status(200).send(generateToken(user._id));
@@ -78,7 +77,9 @@ const login = asyncHandler(async (req, res) => {
     : true;
 
   //Finds an user with the provided Email
-  const user = await User.findOne(isEmail ? { email: username } : { username });
+  const user = await userModel.findOne(
+    isEmail ? { email: username } : { username }
+  );
 
   if (!user)
     return res
