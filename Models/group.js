@@ -85,7 +85,11 @@ const member = new Schema({
     ref: 'user_data',
     required: [true, 'User ID is required!'],
   },
-  role: { type: Schema.Types.ObjectId, ref: 'roles' },
+  role: {
+    type: Schema.Types.ObjectId,
+    ref: 'roles',
+    required: [true, 'Role is required!'],
+  },
 });
 
 const groupdb = db.useDb('group');
