@@ -2,6 +2,8 @@ import { Router } from 'express';
 import {
   addRole,
   createGroup,
+  delRole,
+  editRole,
   getChatroom,
   getGroupData,
   getGroupMenuData,
@@ -26,5 +28,7 @@ groupRouter.get('/getMyMember', verify, getMyMember);
 groupRouter.get('/getMember', verify, getMember);
 groupRouter.get('/getRole', verify, getRole);
 groupRouter.post('/addRole', verify, addRole);
+groupRouter.post('/editrole', verify, editRole);
+groupRouter.post('/delrole', verify, delRole);
 
 export default groupRouter;

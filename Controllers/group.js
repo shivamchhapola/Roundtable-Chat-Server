@@ -211,7 +211,7 @@ const addRole = expressAsyncHandler(async (req, res) => {
     if (groupRRM.roles.length >= 15)
       return res.status(500).send('You can not add more roles!');
     const newRole = await roleModel.create({ groupid, name, tier });
-    await groupRoomsRolesAndMembersModel.updateOne(
+    await groupRoomsRolesAndMembersModel.findOneAndUpdate(
       { groupid },
       { $addToSet: { roles: newRole._id } }
     );
@@ -225,6 +225,50 @@ const addRole = expressAsyncHandler(async (req, res) => {
   }
 });
 
+const editRole = expressAsyncHandler(async (req, res) => {
+  const id = req.body.id;
+  const name = req.body.name;
+  const tier = req.body.tier;
+  const memberid = req.body.memberid;
+
+  try {
+    const member = await memberModel.findById(memberid);
+    const memberRole = await roleModel.findById(member.role);
+    const todrole = await roleModel.findById(id);
+    if (todrole.tier === 5 && tier !== 5)
+      return res.status(500).send("You can't do that!");
+    if (memberRole.tier < 5)
+      return res.status(500).send("You don't have the permission to do that!");
+    const role = await roleModel.findByIdAndUpdate(id, { name, tier });
+    return res.status(200).json(role);
+  } catch (error) {
+    return res.status(500).send("Couldn't Edit Role Data: " + error);
+  }
+});
+
+const delRole = expressAsyncHandler(async (req, res) => {
+  const id = req.body.id;
+  const gid = req.body.gid;
+  const memberid = req.body.memberid;
+
+  try {
+    const member = await memberModel.findById(memberid);
+    const memberRole = await roleModel.findById(member.role);
+    const todrole = await roleModel.findById(id);
+    if (todrole.tier >= 5) return res.status(500).send("You can't do that!");
+    if (memberRole.tier < 5)
+      return res.status(500).send("You don't have the permission to do that!");
+    const role = await roleModel.findByIdAndRemove(id);
+    await groupRoomsRolesAndMembersModel.findOneAndUpdate(
+      { groupid: gid },
+      { $pull: { roles: id } }
+    );
+    return res.status(200).json(role);
+  } catch (error) {
+    return res.status(500).send("Couldn't Edit Role Data: " + error);
+  }
+});
+
 export {
   createGroup,
   getGroupData,
@@ -235,4 +279,6 @@ export {
   getMember,
   getRole,
   addRole,
+  editRole,
+  delRole,
 };
