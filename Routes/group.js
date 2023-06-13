@@ -11,6 +11,8 @@ import {
   getMyMember,
   getRole,
   joinGroup,
+  delMember,
+  editMember,
 } from '../Controllers/group.js';
 import { verify } from '../jwt.js';
 import multer from 'multer';
@@ -30,5 +32,7 @@ groupRouter.get('/getRole', verify, getRole);
 groupRouter.post('/addRole', verify, addRole);
 groupRouter.post('/editrole', verify, editRole);
 groupRouter.post('/delrole', verify, delRole);
+groupRouter.post('/editmember', verify, editMember);
+groupRouter.post('/delmember', verify, delMember);
 
 export default groupRouter;
