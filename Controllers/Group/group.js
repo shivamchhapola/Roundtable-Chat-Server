@@ -85,24 +85,36 @@ const createGroup = expressAsyncHandler(async (req, res) => {
 });
 
 const editGroup = expressAsyncHandler(async (req, res) => {
-  const { name, bio, pic, memberid, id } = req.body;
+  const { name, bio, memberid, id } = req.body;
   try {
     const member = await memberModel.findById(memberid);
     const memberRole = await roleModel.findById(member.role);
     if (memberRole.tier < 4)
       return res.status(500).send("You don't have the permission to do that!");
     let updateData;
-    if (memberRole.tier === 4) {
-      updateData =
-        pic === 0
-          ? {
-              bio,
-            }
-          : { bio, pic };
-    } else {
-      updateData = pic === 0 ? { name, bio } : { name, bio, pic };
+    let pic;
+    if (req.file) {
+      const b64 = Buffer.from(req.file.buffer).toString('base64');
+      let dataURI = 'data:' + req.file.mimetype + ';base64,' + b64;
+      pic = await v2.uploader.upload(dataURI, {
+        folder: 'gpp',
+        resource_type: 'auto',
+        upload_preset: 'gpp',
+        public_id: id,
+      });
     }
-    const group = await groupDataModel.findByIdAndUpdate(id, updateData);
+    if (memberRole.tier === 4) {
+      updateData = !pic
+        ? {
+            bio,
+          }
+        : { bio, pic: pic.secure_url };
+    } else {
+      updateData = !pic ? { name, bio } : { name, bio, pic: pic.secure_url };
+    }
+    const group = await groupDataModel.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
     return res.status(200).json(group);
   } catch (error) {
     return res
