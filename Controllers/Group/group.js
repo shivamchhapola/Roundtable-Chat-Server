@@ -84,6 +84,47 @@ const createGroup = expressAsyncHandler(async (req, res) => {
   }
 });
 
+const delGroup = expressAsyncHandler(async (req, res) => {
+  try {
+    const member = await memberModel.findById(req.body.admin);
+    const memberRole = await roleModel.findById(member.role);
+    if (memberRole.tier < 5)
+      return res.status(500).send("You don't have the permission to do that!");
+    const group = await groupDataModel.findOneAndDelete(req.body);
+    v2.uploader.destroy('gpp/' + group._id);
+    const grouprrm = await groupRoomsRolesAndMembersModel.findOneAndDelete({
+      groupid: group._id,
+    });
+    Promise.all(
+      grouprrm.members.map(async (mid) => {
+        const member = await memberModel.findOneAndDelete({ _id: mid });
+        await userProfileModel.findOneAndUpdate(
+          { userid: member.userid },
+          {
+            $pull: { groups: group._id },
+          }
+        );
+      })
+    ).then((rrrreeeessss) => {
+      res.status(200).json(group);
+    });
+    Promise.all(
+      grouprrm.roles.map(async (rid) => {
+        await roleModel.findByIdAndDelete(rid);
+      })
+    );
+    Promise.all(
+      grouprrm.rooms.map(async (rid) => {
+        await chatroomModel.findByIdAndDelete(rid);
+      })
+    );
+  } catch (error) {
+    return res
+      .status(500)
+      .send('Could not Delete group, please try again: ' + error);
+  }
+});
+
 const editGroup = expressAsyncHandler(async (req, res) => {
   const { name, bio, memberid, id } = req.body;
   try {
@@ -175,4 +216,11 @@ const joinGroup = expressAsyncHandler(async (req, res) => {
   }
 });
 
-export { createGroup, getGroupData, getGroupMenuData, joinGroup, editGroup };
+export {
+  createGroup,
+  getGroupData,
+  getGroupMenuData,
+  joinGroup,
+  editGroup,
+  delGroup,
+};

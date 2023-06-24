@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   createGroup,
+  delGroup,
   editGroup,
   getGroupData,
   getGroupMenuData,
@@ -29,6 +30,7 @@ const upload = multer({ storage });
 //Group
 groupRouter.post('/createGroup', verify, upload.single('pic'), createGroup);
 groupRouter.post('/editgroup', verify, upload.single('pic'), editGroup);
+groupRouter.post('/delgroup', verify, delGroup);
 groupRouter.post('/joinGroup', verify, joinGroup);
 groupRouter.get('/getGroupMenuData', verify, getGroupMenuData);
 groupRouter.get('/getGroupData', verify, getGroupData);
